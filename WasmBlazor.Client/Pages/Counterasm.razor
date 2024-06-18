@@ -1,0 +1,83 @@
+﻿@rendermode InteractiveWebAssembly
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudText Typo="Typo.h1">@currentCount</MudText>
+<MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="IncrementCount">Click me to Increment</MudButton>
+<MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="fetchDemo">Fetch Data</MudButton>
+<button @onclick="IncrementCount"> Normal button </button>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="Write">Console from wasm</MudButton>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="Get3DObject">Get 3d</MudButton>
+<MudSelect T="string" Label="Coffee" AnchorOrigin="Origin.BottomCenter">
+    <MudSelectItem Value="@("Cappuccino")" />
+    <MudSelectItem Value="@("Cafe Latte")" />
+    <MudSelectItem Value="@("Espresso")" />
+</MudSelect>
+    @if (dataServer is not null)
+{
+    <MudText Typo="Typo.h1">@dataServer</MudText>
+}
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="RequestMicrophoneAccess">Request</MudButton>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="PlaySound">Play Sound</MudButton>
+
+    <audio id="audioPlayer" src="sound.mp3"></audio>
+<canvas id="three1" style="overflow:hidden ; width:100% ; height: 100%; background-color:#00000020;">
+
+</canvas>
+
+    @code {
+    private int currentCount = 0;
+    private string dataServer;
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+    private async Task PlaySound()
+    {
+        await JS.InvokeVoidAsync("playAudio");
+    }
+    private async Task fetchDemo()
+    {
+        var data = await Http.GetFromJsonAsync<Res>("gettext");
+        dataServer = data?.message.ToString();
+        Console.WriteLine(data?.message.ToString());
+    }
+    public class Res
+    {
+        public string message { get; set; }
+    }
+    private async Task RequestMicrophoneAccess()
+    {
+        await JS.InvokeVoidAsync("requestMicrophoneAccess");
+    }
+    private void Write(){
+        Console.WriteLine("From server");
+    }
+    public async Task Get3DObject()
+    {
+        try
+        {
+            var responseString = "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-128/9ef1c68fbb944147bcfcc891d3912645.glb?sv=2023-01-03&se=2024-06-17T12%3A46%3A58Z&sr=b&sp=r&sig=xSGvhgyOxnBo3h%2BTj%2FyLYUbeszL3tC3DNRyj61n87cg%3D";
+            using var httpClient = new HttpClient();
+            var response = await httpClient.GetAsync(responseString);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadAsByteArrayAsync();
+
+                await JS.InvokeVoidAsync("displayModel", result);
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+
+        StateHasChanged();
+    }
+
+}

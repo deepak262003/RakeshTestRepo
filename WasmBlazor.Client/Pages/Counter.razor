@@ -1,0 +1,19 @@
+﻿@page "/counter"
+
+@using WasmBlazor.Client.Pages
+
+<PageTitle>Counter</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">Counter</MudText>
+<MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="Write">Console</MudButton>
+<br />
+<br />
+@* <MudText Class="mb-4">Current count: @currentCount</MudText> *@
+
+<Counterasm />
+
+@code{
+    private void Write(){
+        Console.WriteLine("Clicked");
+    }
+}
